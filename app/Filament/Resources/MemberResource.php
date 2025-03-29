@@ -1,0 +1,87 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\MemberResource\Pages;
+use App\Filament\Resources\MemberResource\RelationManagers;
+use App\Models\Member;
+use Filament\Forms;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class MemberResource extends Resource
+{
+    protected static ?string $model = Member::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-user-circle';
+    protected static ?string $navigationGroup = 'Dynamic Pages';
+    protected static ?int $navigationSort = 2;
+
+
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                TextInput::make('name')->required()->placeholder('Enter Name'),
+                TextInput::make('designation')->required()->placeholder('Enter Designation'),
+                TextInput::make('fb_url')->label('Facebook URL')->placeholder('Enter Facebook URL')->url(),
+                TextInput::make('tw_url')->label('Twitter URL')->placeholder('Enter Twitter URL')->url(),
+                TextInput::make('ins_url')->label('Instagram URL')->placeholder('Enter Instagram URL')->url(),
+                FileUpload::make('image'),
+                Select::make('status')->options([1=>'Active',0=>'Block'])->required(),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                ImageColumn::make('image')->width(50)->height(50),
+                TextColumn::make('name'),
+                TextColumn::make('designation'),
+                TextColumn::make('status')
+                ->formatStateUsing(function ($state) {
+                    return $state ? 'Active' : 'Block';
+                })
+                ->label('Status')
+                ->color(fn ($state) => $state ? 'success' : 'danger'),
+            ])
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListMembers::route('/'),
+            'create' => Pages\CreateMember::route('/create'),
+            'edit' => Pages\EditMember::route('/{record}/edit'),
+        ];
+    }
+}
